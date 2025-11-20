@@ -1,0 +1,43 @@
+/* src/components/Explore.css */
+.explore-page {
+  padding: 2rem;
+}
+
+.explore-page h1 {
+  margin-bottom: 2rem;
+  color: #2c3e50;
+}
+
+.explore-filter {
+  margin-bottom: 2rem;
+}
+
+.explore-filter select {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  width: 250px;
+}
+
+.places-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.place-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.place-card h3 {
+  margin-bottom: 1rem;
+  color: #4a6cfa;
+}
+
+.place-card p {
+  margin-bottom: 0.5rem;
+  color: #666;
+}

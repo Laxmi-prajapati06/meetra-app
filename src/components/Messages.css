@@ -1,0 +1,259 @@
+/* src/components/Messages.css */
+.messages-page {
+  display: flex;
+  height: calc(100vh - 80px);
+}
+
+.conversations-list {
+  width: 300px;
+  border-right: 1px solid #ddd;
+  background: white;
+  overflow-y: auto;
+}
+
+.conversations-list h2 {
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+  color: #2c3e50;
+}
+
+.conversation-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.conversation-item:hover {
+  background-color: #f5f7fa;
+}
+
+.conversation-item.active {
+  background-color: #e0e7ff;
+}
+
+.conversation-item .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #4a6cfa;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+.conversation-info h3 {
+  margin-bottom: 0.2rem;
+  color: #2c3e50;
+}
+
+.conversation-info p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+}
+
+.chat-header {
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+  background: white;
+}
+
+.chat-header h2 {
+  color: #2c3e50;
+}
+
+.messages-container {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.message {
+  max-width: 70%;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  border-radius: 10px;
+}
+
+.message.received {
+  background: white;
+  align-self: flex-start;
+}
+
+.message.sent {
+  background: #4a6cfa;
+  color: white;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+  display: block;
+  opacity: 0.7;
+}
+
+.message-input {
+  display: flex;
+  padding: 1rem;
+  border-top: 1px solid #ddd;
+  background: white;
+}
+
+.message-input input {
+  flex: 1;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-right: 1rem;
+}
+
+.no-chat-selected {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #666;
+}
+
+/* Add these styles to your existing Messages.css */
+.messages-page {
+  display: flex;
+  height: calc(100vh - 80px);
+}
+
+.conversations-list {
+  width: 350px;
+  border-right: 1px solid #e1e8ed;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.conversations-list h2 {
+  padding: 1.5rem;
+  margin: 0;
+  border-bottom: 1px solid #e1e8ed;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.conversations-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  position: relative;
+}
+
+.conversation-item:hover {
+  background-color: #f8f9fa;
+}
+
+.conversation-item.active {
+  background-color: #e3f2fd;
+}
+
+.conversation-item .avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.conversation-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversation-info h3 {
+  margin: 0 0 0.25rem 0;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.last-message {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-time {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.unread-badge {
+  background: #4a6cfa;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+}
+
+.chat-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e1e8ed;
+  background: white;
+  display: flex;
+  align-items: center;
+}
+
+.chat-user-info {
+  display: flex;
+  align-items: center;
+}
+
+.chat-user-info .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+}

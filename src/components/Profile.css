@@ -1,0 +1,107 @@
+/* src/components/Profile.css */
+.profile-page {
+  padding: 2rem;
+}
+
+.profile-page h1 {
+  margin-bottom: 2rem;
+  color: #2c3e50;
+}
+
+.profile-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #4a6cfa;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0 auto 1rem;
+}
+
+.profile-header h2 {
+  color: #2c3e50;
+}
+
+.profile-details {
+  margin-bottom: 2rem;
+}
+
+.detail-item {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-item strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #4a6cfa;
+}
+
+.interests-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.simple-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.simple-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed #f0f0f0;
+}
+
+.planned-row span,
+.joined-row span {
+  color: #2c3e50;
+}
+
+.btn-link.remove-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: background-color 120ms ease, transform 60ms ease;
+}
+
+.btn-link.remove-btn:hover {
+  background-color: rgba(231,76,60,0.08);
+}
+
+.btn-link.remove-btn:active {
+  transform: translateY(1px);
+}
+
+.muted {
+  color: #888;
+  font-size: 0.95rem;
+}
