@@ -22,27 +22,51 @@ router.post('/profile-picture',
                 });
             }
 
-            // Upload to Cloudinary
-            const result = await uploadToCloudinary(req.file, 'meetra/profile-pictures');
+            // Check if Cloudinary is configured
+            if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Cloudinary is not properly configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env file'
+                });
+            }
+
+            // Set response timeout to 60 seconds for large uploads
+            req.setTimeout(60000);
+
+            // Upload to Cloudinary (30 second timeout)
+            console.log('[Upload] Uploading to Cloudinary...');
+            const result = await uploadToCloudinary(req.file, 'meetra/profile-pictures', 30000);
+            console.log(`[Upload] Cloudinary upload successful: ${result.public_id}`);
 
             // Update user's profile picture
-            await User.findByIdAndUpdate(req.user._id, {
+            const updatedUser = await User.findByIdAndUpdate(req.user._id, {
                 'profile.profilePicture': result.secure_url
-            });
+            }, { new: true });
+
+            console.log('[Upload] User profile updated successfully');
 
             res.json({
                 success: true,
                 message: 'Profile picture uploaded successfully',
-                data: {
-                    url: result.secure_url,
-                    publicId: result.public_id
-                }
+                data: updatedUser,
+                user: updatedUser
             });
         } catch (error) {
-            console.error('Upload profile picture error:', error);
+            console.error('[Upload] Error:', error);
+            
+            // Handle timeout errors
+            if (error.message && error.message.includes('timed out')) {
+                return res.status(408).json({
+                    success: false,
+                    message: 'Upload timed out. The file may be too large or your connection is slow. Try with a smaller image.',
+                    error: error.message
+                });
+            }
+
             res.status(500).json({
                 success: false,
-                message: 'Server error while uploading profile picture'
+                message: error.message || 'Server error while uploading profile picture',
+                error: error.message
             });
         }
     }

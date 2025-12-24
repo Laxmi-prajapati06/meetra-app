@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './Profile.css';
 import { useAuth } from '../context/AuthContext';
-import { eventsAPI, usersAPI } from '../services/api';
+import { eventsAPI, usersAPI, uploadAPI } from '../services/api';
 
 const Profile = () => {
   const { user, loading, updateProfile, updateUser } = useAuth();
@@ -11,6 +11,8 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [joinedEventTitles, setJoinedEventTitles] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const joinedEvents = useMemo(() => (user?.eventsJoined || []), [user?.eventsJoined]);
   useEffect(() => {
     let mounted = true;
@@ -81,6 +83,51 @@ const Profile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfilePictureUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Image size must be less than 5MB');
+      return;
+    }
+
+    // Check if file size is reasonable for faster upload (< 2MB recommended)
+    if (file.size > 2 * 1024 * 1024) {
+      console.warn('[Profile] Large file detected, upload may take longer');
+    }
+
+    setUploading(true);
+    setUploadError(null);
+    try {
+      console.log(`[Profile] Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)...`);
+      const result = await uploadAPI.uploadProfilePicture(file);
+      console.log('[Profile] Upload result:', result);
+      
+      if (result.success && (result.data || result.user)) {
+        // Update user context with new profile picture
+        updateUser(result.data || result.user);
+        setUploadError(null);
+      } else {
+        setUploadError(result.message || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('[Profile] Upload error:', err);
+      setUploadError(err.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (e.target) e.target.value = '';
+    }
   };
 
   const saveProfile = async () => {
@@ -261,6 +308,37 @@ const Profile = () => {
           </>
         ) : (
           <div className="profile-edit">
+            <div className="profile-picture-upload">
+              <label>Profile Picture</label>
+              <div className="avatar-container">
+                <div className="profile-avatar-edit">
+                  {user.profile?.profilePicture ? (
+                    <img src={user.profile.profilePicture} alt="Profile" />
+                  ) : (
+                    name.charAt(0)
+                  )}
+                </div>
+                <div className="upload-controls">
+                  <input
+                    type="file"
+                    id="profilePictureInput"
+                    accept="image/*"
+                    onChange={handleProfilePictureUpload}
+                    disabled={uploading}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => document.getElementById('profilePictureInput').click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? 'Uploading…' : 'Change Picture'}
+                  </button>
+                  {uploadError && <div className="error small">{uploadError}</div>}
+                </div>
+              </div>
+            </div>
             <div className="form-row">
               <label>Full name</label>
               <input name="fullName" value={form.fullName} onChange={handleChange} />

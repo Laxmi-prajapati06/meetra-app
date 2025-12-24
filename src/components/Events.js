@@ -118,6 +118,15 @@ const Events = () => {
     'Social Gathering'
   ];
 
+  // Helper: normalize event to ensure it has an `image` property
+  const normalizeEvent = (event) => {
+    if (!event) return event;
+    return {
+      ...event,
+      image: event.image || (event.images && event.images.length > 0 ? event.images[0].url : null)
+    };
+  };
+
   // Add Event Form State
   const [eventForm, setEventForm] = useState({
     title: '',
@@ -137,11 +146,23 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
+      try {
+        // Try to fetch from backend
+        const res = await eventsAPI.getEvents();
+        if (res && res.success && Array.isArray(res.data)) {
+          // Normalize events to have an `image` property
+          const normalized = res.data.map(normalizeEvent);
+          setEvents(normalized);
+        } else {
+          // Fallback to sample data
+          setEvents(sampleEvents);
+        }
+      } catch (err) {
+        console.error('Failed to fetch events from API, falling back to sample data', err);
         setEvents(sampleEvents);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchEvents();
@@ -329,35 +350,65 @@ const Events = () => {
     try {
       setLoading(true);
 
-      // Create new event object
-      const newEvent = {
-        _id: Date.now().toString(), // Temporary ID
+      const payload = {
         title: eventForm.title,
         description: eventForm.description,
         category: eventForm.category,
         date: eventForm.date,
-        time: { 
-          start: eventForm.startTime, 
-          end: eventForm.endTime 
-        },
+        time: { start: eventForm.startTime, end: eventForm.endTime },
         location: eventForm.location,
-        maxAttendees: parseInt(eventForm.maxAttendees),
-        attendees: [],
-        organizer: {
-          username: user?.username || 'Current User',
-          _id: user?._id || 'current_user'
-        },
+        maxAttendees: parseInt(eventForm.maxAttendees, 10),
+        tags: eventForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         price: {
           type: eventForm.priceType,
-          amount: eventForm.priceType === 'free' ? 0 : parseFloat(eventForm.priceAmount)
+          amount: eventForm.priceType === 'free' ? 0 : parseFloat(eventForm.priceAmount || '0')
         },
-        tags: eventForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        image: eventForm.image || '/default-event.jpg'
+        // Include image URL if provided
+        images: eventForm.image ? [{ url: eventForm.image, publicId: null }] : []
       };
 
-      // Add to events list (simulate API call)
-      setEvents(prev => [newEvent, ...prev]);
-      
+      console.log('[Event Creation] Payload:', payload);
+
+      // If user is authenticated, persist to backend. Otherwise, fallback to local simulation.
+      if (isAuthenticated) {
+        const res = await eventsAPI.createEvent(payload);
+        console.log('[Event Creation] Response:', res);
+        if (res && res.success) {
+          const created = normalizeEvent(res.data);
+          setEvents(prev => [created, ...prev]);
+
+          // Update auth context: add to user's created events if available
+          if (user) {
+            const existing = user.eventsCreated || [];
+            updateUser({ eventsCreated: [created, ...existing] });
+          }
+
+          alert('Event created successfully!');
+        } else {
+          throw new Error(res?.message || 'Failed to create event');
+        }
+      } else {
+        // Local simulation when not authenticated
+        const newEvent = {
+          _id: Date.now().toString(), // Temporary ID
+          title: eventForm.title,
+          description: eventForm.description,
+          category: eventForm.category,
+          date: eventForm.date,
+          time: { start: eventForm.startTime, end: eventForm.endTime },
+          location: eventForm.location,
+          maxAttendees: parseInt(eventForm.maxAttendees, 10),
+          attendees: [],
+          organizer: { username: user?.username || 'Current User', _id: user?._id || 'current_user' },
+          price: { type: eventForm.priceType, amount: eventForm.priceType === 'free' ? 0 : parseFloat(eventForm.priceAmount || '0') },
+          tags: eventForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+          image: eventForm.image || '/default-event.jpg'
+        };
+
+        setEvents(prev => [newEvent, ...prev]);
+        alert('Event created (local)');
+      }
+
       // Reset form and close modal
       setEventForm({
         title: '',
@@ -373,12 +424,11 @@ const Events = () => {
         priceAmount: '0',
         image: ''
       });
-      
+
       setShowAddEventModal(false);
-      alert('Event created successfully!');
-      
     } catch (err) {
-      alert('Failed to create event: ' + err.message);
+      console.error('Failed to create event', err);
+      alert('Failed to create event: ' + (err.message || err));
     } finally {
       setLoading(false);
     }

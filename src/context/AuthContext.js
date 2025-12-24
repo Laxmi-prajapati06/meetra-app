@@ -5,6 +5,7 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Enhanced API call function with better error handling
 const apiCall = async (endpoint, options = {}) => {
+// ... (apiCall function remains unchanged)
     const token = localStorage.getItem('meetra_token');
     
     const config = {
@@ -69,6 +70,22 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    // NEW: Function to fetch the latest user data and update context
+    const refreshUser = async () => {
+        try {
+            const response = await authAPI.getMe();
+            setUser(response.data);
+            setIsAuthenticated(true);
+            return response.data;
+        } catch (error) {
+            console.error('User refresh failed:', error);
+            localStorage.removeItem('meetra_token');
+            setUser(null);
+            setIsAuthenticated(false);
+            return null;
+        }
+    };
+
     useEffect(() => {
         checkAuthStatus();
     }, []);
@@ -77,21 +94,21 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('meetra_token');
         if (token) {
             try {
-                const response = await authAPI.getMe();
-                setUser(response.data);
-                setIsAuthenticated(true);
-                console.log('User authenticated:', response.data.username);
+                // Use the new refreshUser logic
+                const userData = await refreshUser();
+                if (userData) {
+                    console.log('User authenticated:', userData.username);
+                }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                localStorage.removeItem('meetra_token');
-                setUser(null);
-                setIsAuthenticated(false);
+                // Errors handled inside refreshUser now
             }
         }
         setLoading(false);
     };
 
     const login = async (credentials) => {
+// ... (login function remains largely unchanged, relies on getMe for full user data on next checkAuthStatus)
         try {
             console.log('Login attempt:', credentials.email);
             const response = await authAPI.login(credentials);
@@ -99,10 +116,16 @@ export const AuthProvider = ({ children }) => {
             
             if (data && data.token) {
                 localStorage.setItem('meetra_token', data.token);
-                setUser(data);
-                setIsAuthenticated(true);
-                console.log('Login successful:', data.username);
-                return { success: true, data };
+                
+                // Immediately fetch full populated user data after login
+                const fullUser = await refreshUser(); 
+
+                if (fullUser) {
+                    console.log('Login successful:', fullUser.username);
+                    return { success: true, data: fullUser };
+                }
+                
+                return { success: true, data }; // Fallback if refresh fails
             } else {
                 throw new Error('No token received from server');
             }
@@ -123,10 +146,16 @@ export const AuthProvider = ({ children }) => {
             
             if (data && data.token) {
                 localStorage.setItem('meetra_token', data.token);
-                setUser(data);
-                setIsAuthenticated(true);
-                console.log('Registration successful:', data.username);
-                return { success: true, data };
+                
+                // Immediately fetch full populated user data after registration
+                const fullUser = await refreshUser();
+
+                if (fullUser) {
+                    console.log('Registration successful:', fullUser.username);
+                    return { success: true, data: fullUser };
+                }
+
+                return { success: true, data }; // Fallback if refresh fails
             } else {
                 throw new Error('No token received from server');
             }
@@ -174,6 +203,13 @@ export const AuthProvider = ({ children }) => {
             // Backend returns { success, data }
             const userData = data?.data || data;
             if (userData) {
+                // After updating profile, fetch the fully populated user
+                const fullUser = await refreshUser();
+                if (fullUser) {
+                    return { success: true, data: fullUser };
+                }
+
+                // Fallback: if refresh failed, use returned userData
                 setUser(userData);
                 return { success: true, data: userData };
             }
@@ -194,7 +230,8 @@ export const AuthProvider = ({ children }) => {
         logout,
         updateUser,
         updateProfile,
-        checkAuthStatus
+        checkAuthStatus,
+        refreshUser // NEW: Expose refreshUser to components
     };
 
     return (

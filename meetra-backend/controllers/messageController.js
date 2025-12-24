@@ -200,39 +200,40 @@ const sendMessage = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Missing receiverId or content' });
         }
 
-        const conversationId = [senderId.toString(), receiverId.toString()].sort().join('_');
+        const normalizedReceiverId = receiverId && receiverId.toString ? receiverId.toString() : String(receiverId);
+        const conversationId = [senderId.toString(), normalizedReceiverId].sort().join('_');
 
         const message = await Message.create({
             sender: senderId,
-            receiver: receiverId,
+            receiver: normalizedReceiverId,
             content,
-            messageType,
-            conversationId
+            messageType
         });
 
-        // Build populated message explicitly to avoid populate mismatches
+        // Build populated message explicitly with complete user info
         const senderUser = await User.findById(senderId).select('username profile profilePicture');
-        const receiverUser = await User.findById(receiverId).select('username profile profilePicture');
+        const receiverUser = await User.findById(normalizedReceiverId).select('username profile profilePicture');
         const populatedMessage = message.toObject();
-        populatedMessage.sender = senderUser;
-        populatedMessage.receiver = receiverUser;
+        populatedMessage.sender = senderUser ? { _id: senderUser._id.toString(), username: senderUser.username, profile: senderUser.profile, profilePicture: senderUser.profilePicture } : null;
+        populatedMessage.receiver = receiverUser ? { _id: receiverUser._id.toString(), username: receiverUser.username, profile: receiverUser.profile, profilePicture: receiverUser.profilePicture } : null;
 
         // Emit via Socket.io if available
         const io = req.app.get('io');
         if (io) {
             try {
-                    console.log(`Emitting message ${message._id} via io: sender=${senderId} receiver=${receiverId} -- populated sender=${populatedMessage.sender?.username} receiver=${populatedMessage.receiver?.username}`);
-                    // Emit to sender's user room
-                    io.to(`user_${senderId}`).emit('message-sent', populatedMessage);
+                // Emit to sender's user room
+                io.to(`user_${senderId}`).emit('message-sent', populatedMessage);
 
-                    // Emit to receiver's user room
-                    io.to(`user_${receiverId}`).emit('receive-message', populatedMessage);
+                // Emit to receiver's user room
+                io.to(`user_${normalizedReceiverId}`).emit('receive-message', populatedMessage);
 
-                    // Emit to conversation room
-                    io.to(conversationId).emit('new-message', populatedMessage);
-                } catch (emitErr) {
-                    console.error('Error emitting socket events for message:', emitErr);
-                }
+                // Emit to conversation room
+                io.to(conversationId).emit('new-message', populatedMessage);
+                
+                console.log(`[REST] ✅ Delivered - From: ${populatedMessage.sender?.username} To: ${populatedMessage.receiver?.username}`);
+            } catch (emitErr) {
+                console.error('[REST] Error emitting:', emitErr);
+            }
         }
 
         res.json({ success: true, data: populatedMessage });

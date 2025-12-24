@@ -29,17 +29,32 @@ const upload = multer({
     }
 });
 
-// Upload to Cloudinary function
-const uploadToCloudinary = (file, folder = 'meetra') => {
+// Upload to Cloudinary function with timeout handling
+const uploadToCloudinary = (file, folder = 'meetra', timeoutMs = 30000) => {
     return new Promise((resolve, reject) => {
+        let timeoutId;
+        let streamEnded = false;
+
+        // Set timeout
+        timeoutId = setTimeout(() => {
+            if (!streamEnded) {
+                streamEnded = true;
+                reject(new Error('Upload to Cloudinary timed out. Please try again with a smaller image.'));
+            }
+        }, timeoutMs);
+
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 folder: folder,
                 public_id: `${folder}_${uuidv4()}`,
                 resource_type: 'auto',
-                format: 'webp' // Convert images to webp for better performance
+                format: 'webp', // Convert images to webp for better performance
+                quality: 'auto' // Auto optimize quality
             },
             (error, result) => {
+                streamEnded = true;
+                clearTimeout(timeoutId);
+                
                 if (error) {
                     reject(error);
                 } else {
@@ -47,6 +62,13 @@ const uploadToCloudinary = (file, folder = 'meetra') => {
                 }
             }
         );
+
+        // Handle stream errors
+        uploadStream.on('error', (error) => {
+            streamEnded = true;
+            clearTimeout(timeoutId);
+            reject(error);
+        });
 
         uploadStream.end(file.buffer);
     });

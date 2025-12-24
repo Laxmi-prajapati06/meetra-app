@@ -19,7 +19,8 @@ const createEvent = async (req, res) => {
             price,
             requirements,
             visibility,
-            coordinates
+            coordinates,
+            images
         } = req.body;
 
         const event = await Event.create({
@@ -35,7 +36,8 @@ const createEvent = async (req, res) => {
             price: price || { type: 'free', amount: 0, currency: 'INR' },
             requirements: requirements || '',
             visibility: visibility || 'public',
-            coordinates: coordinates || null
+            coordinates: coordinates || null,
+            images: images || []
         });
 
         // Add event to user's created events
@@ -57,6 +59,7 @@ const createEvent = async (req, res) => {
         
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map(err => err.message);
+            console.error('Validation errors:', errors);
             return res.status(400).json({
                 success: false,
                 message: 'Event validation failed',
@@ -64,9 +67,11 @@ const createEvent = async (req, res) => {
             });
         }
 
+        console.error('Full error:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error while creating event'
+            message: 'Server error while creating event',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };

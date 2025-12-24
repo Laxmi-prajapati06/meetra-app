@@ -148,7 +148,8 @@ eventSchema.virtual('isFull').get(function() {
 eventSchema.index({ category: 1, date: 1 });
 eventSchema.index({ organizer: 1 });
 eventSchema.index({ status: 1 });
-eventSchema.index({ location: '2dsphere' });
+// Location stored as string, not GeoJSON, so use text index instead of 2dsphere
+eventSchema.index({ location: 'text' });
 eventSchema.index({ tags: 1 });
 
 // Update status based on attendees count and date

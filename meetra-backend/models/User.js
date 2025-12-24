@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
         interests: [{
             type: String,
             trim: true,
-            maxlength: [20, 'Interest cannot exceed 20 characters']
+            maxlength: [100, 'Interest cannot exceed 100 characters']
         }],
         profilePicture: {
             type: String,

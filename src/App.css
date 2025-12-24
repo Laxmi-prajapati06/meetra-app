@@ -8,7 +8,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #fdf0d5;
+  background-color: #F2F5FD;
   color: #333;
 }
 
@@ -62,4 +62,33 @@ body {
   /* Standard properties only */
   font-feature-settings: 'liga';
   font-smooth: antialiased;
+}
+
+:root {
+  /* Primary Colors */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #4a6cfa;
+  --primary-dark: #3a5cea;
+  --primary-light: #e0e7ff;
+  
+  /* Secondary Colors */
+  --secondary-color: #10b981;
+  --secondary-dark: #0da271;
+  
+  /* Neutral Colors */
+  --dark-bg: #003049;
+  --card-bg: #ffffff;
+  --page-bg: #f8fafc;
+  --text-primary: #2c3e50;
+  --text-secondary: #666;
+  --text-light: #888;
+  --border-color: #e1e8ed;
+  --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-heavy: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* Spacing */
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+  --border-radius-lg: 16px;
 }

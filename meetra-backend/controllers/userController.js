@@ -154,9 +154,17 @@ const connectUser = async (req, res) => {
             }
         });
 
+        // Return updated user with populated connections so frontend persists across refresh
+        const updatedUser = await User.findById(req.user._id)
+            .select('-password')
+            .populate('connections.user', 'username profile')
+            .populate('eventsJoined', 'title date location')
+            .populate('eventsCreated', 'title date location');
+
         res.json({
             success: true,
-            message: 'Successfully connected with user'
+            message: 'Successfully connected with user',
+            data: updatedUser
         });
     } catch (error) {
         console.error('Connect user error:', error);

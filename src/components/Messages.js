@@ -25,12 +25,58 @@ const Messages = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Fetch conversations
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchConversations();
+  // Fetch conversations (stable reference)
+  const fetchConversations = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('meetra_token');
+      const response = await fetch('http://localhost:5000/api/messages/conversations', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        let serverConvs = data.data || [];
+
+        // Merge connected users (from auth `user.connections`) so they appear in sidebar
+        const convMap = new Map();
+        serverConvs.forEach(c => convMap.set(c._id, c));
+
+        const myId = getId(user?._id);
+        const connectedEntries = (user?.connections || []).filter(Boolean);
+
+        connectedEntries.forEach(entry => {
+          const connUser = entry.user || entry;
+          const otherId = getId(connUser._id || connUser);
+          const conversationId = [myId, otherId].sort().join('_');
+          if (!convMap.has(conversationId)) {
+            convMap.set(conversationId, {
+              _id: conversationId,
+              otherUser: connUser,
+              lastMessage: null,
+              lastActivity: entry.connectedAt || Date.now(),
+              unreadCount: 0
+            });
+          }
+        });
+
+        // Sort conversations by lastActivity (descending)
+        const merged = Array.from(convMap.values()).sort((a, b) => {
+          const ta = a.lastActivity ? new Date(a.lastActivity).getTime() : 0;
+          const tb = b.lastActivity ? new Date(b.lastActivity).getTime() : 0;
+          return tb - ta;
+        });
+
+        setConversations(merged);
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
     }
-  }, [isAuthenticated]);
+  }, [user]);
+
+  useEffect(() => {
+    if (isAuthenticated) fetchConversations();
+  }, [isAuthenticated, fetchConversations]);
 
   // Socket event listeners
 
@@ -229,22 +275,7 @@ const Messages = () => {
     return () => window.removeEventListener('clear-conversation', clearHandler);
   }, [activeChat, user]);
 
-  const fetchConversations = async () => {
-    try {
-      const token = localStorage.getItem('meetra_token');
-      const response = await fetch('http://localhost:5000/api/messages/conversations', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setConversations(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-    }
-  };
+  
 
   const fetchMessages = async (userId) => {
     setLoading(true);
@@ -390,7 +421,11 @@ const Messages = () => {
               onClick={() => handleSelectConversation(conversation)}
             >
               <div className="avatar">
-                {conversation.otherUser.username?.charAt(0).toUpperCase()}
+                {conversation.otherUser?.profile?.profilePicture ? (
+                  <img src={conversation.otherUser.profile.profilePicture} alt={conversation.otherUser.username} />
+                ) : (
+                  conversation.otherUser.username?.charAt(0).toUpperCase()
+                )}
               </div>
               <div className="conversation-info">
                 <h3>{conversation.otherUser.username}</h3>
@@ -418,7 +453,11 @@ const Messages = () => {
             <div className="chat-header">
               <div className="chat-user-info">
                 <div className="avatar">
-                  {getOtherUser()?.username?.charAt(0).toUpperCase()}
+                  {getOtherUser()?.profile?.profilePicture ? (
+                    <img src={getOtherUser().profile.profilePicture} alt={getOtherUser()?.username} />
+                  ) : (
+                    getOtherUser()?.username?.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div>
                   <h2>{getOtherUser()?.username}</h2>
@@ -442,20 +481,31 @@ const Messages = () => {
                         className={`message ${isSentByMe ? 'sent' : 'received'}`}
                       >
                         {!isSentByMe && (
-                          <div className="message-sender">
-                            {message.sender?.username || message.sender}
+                          <div className="message-avatar">
+                            {message.sender?.profile?.profilePicture ? (
+                              <img src={message.sender.profile.profilePicture} alt={message.sender?.username} />
+                            ) : (
+                              message.sender?.username?.charAt(0).toUpperCase() || '?'
+                            )}
                           </div>
                         )}
-                        <div className="message-content">
-                          <p>{message.content}</p>
-                          <span className="message-time">
-                            {formatTime(message.createdAt)}
-                            {isSentByMe && (
-                              <span className="read-status">
-                                {message.isRead ? '✓✓' : '✓'}
-                              </span>
-                            )}
-                          </span>
+                        <div className="message-bubble">
+                          {!isSentByMe && (
+                            <div className="message-sender">
+                              {message.sender?.username || message.sender}
+                            </div>
+                          )}
+                          <div className="message-content">
+                            <p>{message.content}</p>
+                            <span className="message-time">
+                              {formatTime(message.createdAt)}
+                              {isSentByMe && (
+                                <span className="read-status">
+                                  {message.isRead ? '✓✓' : '✓'}
+                                </span>
+                              )}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );

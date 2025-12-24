@@ -1,4 +1,3 @@
-// server.js - Main server file with Socket.io setup
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -7,6 +6,7 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const Message = require('./models/Message');
 const User = require('./models/User');
+const Event = require('./models/Event');
 const { protectSocket } = require('./middleware/socketAuth');
 
 // Load env vars
@@ -14,6 +14,27 @@ dotenv.config();
 
 // Connect to database
 connectDB();
+
+// Fix: Drop problematic 2dsphere index on Event collection if it exists
+setTimeout(async () => {
+    try {
+        const db = require('./config/database');
+        // Give MongoDB time to connect
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const collection = Event.collection;
+        const indexes = await collection.listIndexes().toArray();
+        const has2dIndex = indexes.some(idx => idx.key.location && idx.key.location === '2dsphere');
+        
+        if (has2dIndex) {
+            console.log('🔧 Dropping problematic 2dsphere index on location field...');
+            await collection.dropIndex('location_2dsphere');
+            console.log('✅ Dropped location 2dsphere index');
+        }
+    } catch (err) {
+        console.log('ℹ️  Index cleanup info:', err.message);
+    }
+}, 2000);
 
 const app = express();
 const server = createServer(app);
@@ -34,6 +55,17 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
+
+// Set timeout for all requests (60 seconds)
+app.use((req, res, next) => {
+    // Set the socket timeout to 120 seconds for file uploads
+    if (req.path.includes('/upload')) {
+        req.socket.setTimeout(120 * 1000);
+    } else {
+        req.socket.setTimeout(60 * 1000);
+    }
+    next();
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -104,45 +136,49 @@ io.on('connection', (socket) => {
             const { receiverId, content, messageType = 'text' } = data;
             
             if (!socket.userId) {
+                console.error('[send-message] Called without authentication');
                 socket.emit('message-error', { error: 'Not authenticated' });
                 return;
             }
 
+            // Normalize receiver ID to string
+            const normalizedReceiverId = receiverId && receiverId.toString ? receiverId.toString() : String(receiverId);
+            
+            console.log(`[send-message] Sender: ${socket.userId}, Receiver: ${normalizedReceiverId}`);
+
             // Save message to database
             const message = await Message.create({
                 sender: socket.userId,
-                receiver: receiverId,
+                receiver: normalizedReceiverId,
                 content,
                 messageType
             });
 
-            // Build populated message explicitly to avoid populate mismatches
+            // Build populated message explicitly
             const senderUser = await User.findById(socket.userId).select('username profile profilePicture');
-            const receiverUser = await User.findById(receiverId).select('username profile profilePicture');
+            const receiverUser = await User.findById(normalizedReceiverId).select('username profile profilePicture');
+            
             const populatedMessage = message.toObject();
-            populatedMessage.sender = senderUser;
-            populatedMessage.receiver = receiverUser;
+            populatedMessage.sender = senderUser ? { _id: senderUser._id.toString(), username: senderUser.username, profile: senderUser.profile, profilePicture: senderUser.profilePicture } : null;
+            populatedMessage.receiver = receiverUser ? { _id: receiverUser._id.toString(), username: receiverUser.username, profile: receiverUser.profile, profilePicture: receiverUser.profilePicture } : null;
 
             // Generate conversation ID
-            const conversationId = [socket.userId, receiverId].sort().join('_');
-
-            // Save to both users' conversation
-            await message.save();
+            const conversationId = [socket.userId, normalizedReceiverId].sort().join('_');
 
             // Emit to sender
             socket.emit('message-sent', populatedMessage);
 
             // Emit to receiver room (supports multiple sockets per user)
-            io.to(`user_${receiverId}`).emit('receive-message', populatedMessage);
-            io.to(`user_${receiverId}`).emit('new-conversation', populatedMessage);
+            io.to(`user_${normalizedReceiverId}`).emit('receive-message', populatedMessage);
+            io.to(`user_${normalizedReceiverId}`).emit('new-conversation', populatedMessage);
 
             // Emit to conversation room
             io.to(conversationId).emit('new-message', populatedMessage);
 
-            console.log(`Message sent from ${socket.userId} to ${receiverId} -- populated sender=${populatedMessage.sender?.username} receiver=${populatedMessage.receiver?.username}`);
+            console.log(`[send-message] ✅ Delivered - From: ${populatedMessage.sender?.username} To: ${populatedMessage.receiver?.username}`);
 
         } catch (error) {
-            console.error('Send message error:', error);
+            console.error('[send-message] Error:', error);
             socket.emit('message-error', { error: 'Failed to send message' });
         }
     });

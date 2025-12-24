@@ -75,12 +75,24 @@ const validateEvent = (req, res, next) => {
         });
     }
 
-    // Check if date is in the future
+    // Check if date is in the future (allow today)
     const eventDate = new Date(date);
-    if (eventDate <= new Date()) {
+    if (isNaN(eventDate.getTime())) {
         return res.status(400).json({
             success: false,
-            message: 'Event date must be in the future'
+            message: 'Invalid date format. Use YYYY-MM-DD',
+            errors: ['Date format is invalid']
+        });
+    }
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    if (eventDate < tomorrow) {
+        return res.status(400).json({
+            success: false,
+            message: 'Event date must be today or in the future'
         });
     }
 

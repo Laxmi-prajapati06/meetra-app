@@ -1,54 +1,110 @@
 /* src/components/People.css */
+/* ENHANCED STYLING */
 .people-page {
   padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); /* Light background gradient */
+  min-height: calc(100vh - 80px);
 }
 
 .people-page h1 {
-  margin-bottom: 2rem;
-  color: #2c3e50;
+  margin-bottom: 2.5rem;
+  color: var(--text-primary);
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
 }
 
 .people-page h2 {
-  margin: 2rem 0 1rem;
-  color: #4a6cfa;
+  margin: 2.5rem 0 1.5rem;
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  padding-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .people-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
 }
 
 .person-card {
   background: white;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-medium);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 360px; /* Consistent height for grid items */
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+.person-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-heavy);
+}
+
+/* Visual cue for suggested matches */
+.person-card.suggested-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #4a6cfa, #3a5cea);
 }
 
 .person-avatar {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background-color: #4a6cfa;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: bold;
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.5rem;
+  overflow: hidden;
+  border: 4px solid white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.person-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .person-card h3 {
   margin-bottom: 0.5rem;
-  color: #2c3e50;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
-.person-card p {
+.branch-info {
   margin-bottom: 1rem;
-  color: #666;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  flex-grow: 1;
 }
 
 .interests {
@@ -56,22 +112,431 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  min-height: 20px;
 }
 
 .interest-tag {
-  background-color: #e0e7ff;
-  color: #4a6cfa;
-  padding: 0.3rem 0.6rem;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.btn-connected {
-  background-color: #10b981;
+.person-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* --- Match Indicator Styles --- */
+.match-indicator {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(235, 245, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+  border-radius: var(--border-radius-sm);
+  text-align: left;
+  border: 1px solid var(--primary-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.common-interests-text {
+    font-weight: 700;
+    color: #10b981; /* Green for commonality */
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.same-branch-text {
+    font-weight: 600;
+    color: #4a6cfa; /* Blue for branch match */
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.match-default-text {
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* --- Button Styles (Consistency with other components) --- */
+
+.btn-primary {
+  background: linear-gradient(135deg, #4a6cfa, #3a5cea);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(74, 108, 250, 0.3);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  border-color: #ced4da;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* NEW BUTTON STYLE */
+.view-profile-btn {
+    /* Uses .btn-secondary styles implicitly, adding specific hover for clarity */
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+}
+.view-profile-btn:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border-color: #ced4da;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+/* END NEW BUTTON STYLE */
+
+.btn-connected {
+  background: linear-gradient(135deg, #10b981, #0da271);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-sm);
   cursor: default;
+  font-weight: 600;
+  opacity: 0.9;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.no-connections-message, .no-suggestions-message {
+  grid-column: 1 / -1; 
+  padding: 2.5rem;
+  background: white;
+  border-radius: var(--border-radius-lg);
+  border: 2px dashed var(--border-color);
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 1rem 0;
+  box-shadow: var(--shadow-light);
+}
+
+.no-suggestions-message p, .no-connections-message p {
+    font-size: 1.1rem;
+}
+
+.no-suggestions-message span {
+  cursor: pointer;
+  color: var(--primary-color);
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+/* Loading Spinner */
+.loading-container {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+/* --- Profile Modal Styles --- */
+
+.modal-overlay-people {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content-people {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-heavy);
+    animation: modalSlideIn 0.4s ease-out;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.modal-header-people {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, #f8fafc 0%, white 100%);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.modal-header-people h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.close-btn-people {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid var(--border-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.close-btn-people:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.profile-details-people {
+    padding: 2rem;
+}
+
+.profile-header-people {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-avatar-people {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+    overflow: hidden;
+    border: 4px solid white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.profile-avatar-people img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-header-people h3 {
+    margin: 0.5rem 0 0.25rem 0;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+}
+
+.branch-info-people {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.about-text-people {
+    margin-top: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-style: italic;
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.profile-section-people {
+    margin-bottom: 2rem;
+}
+
+.profile-section-people h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.interests-list-people {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.interest-tag-people {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    padding: 0.6rem 1rem;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.simple-list-people {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.list-item-people {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px dashed #f0f4ff;
+    color: var(--text-primary);
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.list-meta-people {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.muted-text-people {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+    font-style: italic;
+}
+
+.error-message-people {
+    padding: 1.5rem;
+    margin: 2rem;
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(231, 76, 60, 0.05) 100%);
+    color: #e74c3c;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.modal-actions-people {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-actions-people .btn-primary {
+    max-width: 300px;
+}
+
+/* Modal animation keyframes (re-used from CreateEventModal.css) */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .people-page {
+        padding: 1rem;
+    }
+    .people-page h1 {
+        font-size: 2rem;
+    }
+    .people-page h2 {
+        font-size: 1.5rem;
+    }
+    .people-list {
+        grid-template-columns: 1fr;
+    }
+    .person-card {
+        min-height: auto;
+    }
+    .modal-content-people {
+        margin: 0 10px;
+    }
+    .profile-details-people {
+        padding: 1.5rem;
+    }
 }

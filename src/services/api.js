@@ -88,3 +88,48 @@ export const messagesAPI = {
     sendMessage: (messageData) => apiCall('/messages', { method: 'POST', body: messageData }),
     markAsRead: (senderId) => apiCall('/messages/read', { method: 'PUT', body: { senderId } }),
 };
+
+// Upload API
+export const uploadAPI = {
+    uploadProfilePicture: async (file) => {
+        const token = localStorage.getItem('meetra_token');
+        const formData = new FormData();
+        formData.append('profilePicture', file);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+
+        const config = {
+            method: 'POST',
+            headers: {
+                ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: formData,
+            signal: controller.signal,
+        };
+
+        try {
+            console.log('[API] Starting profile picture upload...');
+            const response = await fetch(`${API_BASE}/upload/profile-picture`, config);
+            clearTimeout(timeoutId);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Upload failed');
+            }
+
+            console.log('[API] Upload successful');
+            return data;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            
+            if (error.name === 'AbortError') {
+                console.error('[API] Upload timeout');
+                throw new Error('Upload timed out. The file may be too large or your connection is slow. Try with a smaller image or check your connection.');
+            }
+            
+            console.error('[API] Upload error:', error);
+            throw error;
+        }
+    },
+};
