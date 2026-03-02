@@ -1,5 +1,5 @@
 // src/context/AuthContext.js
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -85,27 +85,22 @@ export const AuthProvider = ({ children }) => {
             return null;
         }
     };
+    const checkAuthStatus = useCallback(async () => {
+    const token = localStorage.getItem('meetra_token');
+    if (token) {
+        try {
+            await refreshUser();
+        } catch (error) {
+            console.error('Auth check failed:', error);
+        }
+    }
+    setLoading(false);
+    }, []);
 
     useEffect(() => {
         checkAuthStatus();
-    }, []);
+    }, [checkAuthStatus]);
 
-    const checkAuthStatus = async () => {
-        const token = localStorage.getItem('meetra_token');
-        if (token) {
-            try {
-                // Use the new refreshUser logic
-                const userData = await refreshUser();
-                if (userData) {
-                    console.log('User authenticated:', userData.username);
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                // Errors handled inside refreshUser now
-            }
-        }
-        setLoading(false);
-    };
 
     const login = async (credentials) => {
 // ... (login function remains largely unchanged, relies on getMe for full user data on next checkAuthStatus)
