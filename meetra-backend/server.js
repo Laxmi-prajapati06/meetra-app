@@ -6,7 +6,6 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const Message = require('./models/Message');
 const User = require('./models/User');
-const Event = require('./models/Event');
 const { protectSocket } = require('./middleware/socketAuth');
 
 // Load env vars
