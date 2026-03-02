@@ -1,7 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE = process.env.REACT_APP_API_URL;
 
 // Enhanced API call function with better error handling
 const apiCall = async (endpoint, options = {}) => {
