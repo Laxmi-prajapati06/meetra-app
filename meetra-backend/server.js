@@ -15,27 +15,6 @@ dotenv.config();
 // Connect to database
 connectDB();
 
-// Fix: Drop problematic 2dsphere index on Event collection if it exists
-setTimeout(async () => {
-    try {
-        const db = require('./config/database');
-        // Give MongoDB time to connect
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const collection = Event.collection;
-        const indexes = await collection.listIndexes().toArray();
-        const has2dIndex = indexes.some(idx => idx.key.location && idx.key.location === '2dsphere');
-        
-        if (has2dIndex) {
-            console.log('🔧 Dropping problematic 2dsphere index on location field...');
-            await collection.dropIndex('location_2dsphere');
-            console.log('✅ Dropped location 2dsphere index');
-        }
-    } catch (err) {
-        console.log('ℹ️  Index cleanup info:', err.message);
-    }
-}, 2000);
-
 const app = express();
 const server = createServer(app);
 
