@@ -1,7 +1,5 @@
 // controllers/userController.js
 const User = require('../models/User');
-const Event = require('../models/Event');
-
 // @desc    Get user profile by ID
 // @route   GET /api/users/:id
 // @access  Public
@@ -210,30 +208,49 @@ const disconnectUser = async (req, res) => {
 const getUserSuggestions = async (req, res) => {
     try {
         const currentUser = await User.findById(req.user._id);
-        
-        // Find users with similar interests or same branch, excluding already connected
+
+        if (!currentUser) {
+            return res.status(404).json({
+                success: false,
+                message: "Current user not found"
+            });
+        }
+
+        // Safe defaults
+        const userInterests = currentUser.profile?.interests || [];
+        const userBranch = currentUser.profile?.branch;
+
         const connectedUserIds = currentUser.connections.map(conn => conn.user);
-        connectedUserIds.push(req.user._id); // Exclude self
+        connectedUserIds.push(req.user._id);
+
+        // If user has NO interests → suggest by branch only
+        const matchConditions = {
+            _id: { $nin: connectedUserIds }
+        };
+
+        if (userInterests.length > 0) {
+            matchConditions.$or = [
+                { 'profile.interests': { $in: userInterests } },
+                { 'profile.branch': userBranch }
+            ];
+        } else {
+            matchConditions['profile.branch'] = userBranch;
+        }
 
         const suggestions = await User.aggregate([
-            {
-                $match: {
-                    _id: { $nin: connectedUserIds },
-                    $or: [
-                        { 'profile.interests': { $in: currentUser.profile.interests } },
-                        { 'profile.branch': currentUser.profile.branch }
-                    ]
-                }
-            },
+            { $match: matchConditions },
             {
                 $addFields: {
                     commonInterests: {
                         $size: {
-                            $setIntersection: ['$profile.interests', currentUser.profile.interests]
+                            $setIntersection: [
+                                { $ifNull: ['$profile.interests', []] },
+                                userInterests
+                            ]
                         }
                     },
                     sameBranch: {
-                        $cond: [{ $eq: ['$profile.branch', currentUser.profile.branch] }, 1, 0]
+                        $cond: [{ $eq: ['$profile.branch', userBranch] }, 1, 0]
                     }
                 }
             },
@@ -244,9 +261,7 @@ const getUserSuggestions = async (req, res) => {
                     'profile.fullName': 1
                 }
             },
-            {
-                $limit: 10
-            },
+            { $limit: 10 },
             {
                 $project: {
                     username: 1,
@@ -261,6 +276,7 @@ const getUserSuggestions = async (req, res) => {
             success: true,
             data: suggestions
         });
+
     } catch (error) {
         console.error('Get user suggestions error:', error);
         res.status(500).json({
