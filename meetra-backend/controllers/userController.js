@@ -202,9 +202,6 @@ const disconnectUser = async (req, res) => {
     }
 };
 
-// @desc    Get user suggestions based on interests and branch
-// @route   GET /api/users/suggestions
-// @access  Private
 const getUserSuggestions = async (req, res) => {
     try {
         const currentUser = await User.findById(req.user._id);
@@ -212,65 +209,26 @@ const getUserSuggestions = async (req, res) => {
         if (!currentUser) {
             return res.status(404).json({
                 success: false,
-                message: "Current user not found"
+                message: "User not found"
             });
         }
 
-        // Safe defaults
         const userInterests = currentUser.profile?.interests || [];
-        const userBranch = currentUser.profile?.branch;
 
-        const connectedUserIds = currentUser.connections.map(conn => conn.user);
-        connectedUserIds.push(req.user._id);
+        // Convert connected user IDs properly to ObjectId
+        const connectedUserIds = currentUser.connections.map(conn =>
+            conn.user.toString()
+        );
 
-        // If user has NO interests → suggest by branch only
-        const matchConditions = {
-            _id: { $nin: connectedUserIds }
-        };
+        connectedUserIds.push(currentUser._id.toString());
 
-        if (userInterests.length > 0) {
-            matchConditions.$or = [
-                { 'profile.interests': { $in: userInterests } },
-                { 'profile.branch': userBranch }
-            ];
-        } else {
-            matchConditions['profile.branch'] = userBranch;
-        }
-
-        const suggestions = await User.aggregate([
-            { $match: matchConditions },
-            {
-                $addFields: {
-                    commonInterests: {
-                        $size: {
-                            $setIntersection: [
-                                { $ifNull: ['$profile.interests', []] },
-                                userInterests
-                            ]
-                        }
-                    },
-                    sameBranch: {
-                        $cond: [{ $eq: ['$profile.branch', userBranch] }, 1, 0]
-                    }
-                }
-            },
-            {
-                $sort: {
-                    sameBranch: -1,
-                    commonInterests: -1,
-                    'profile.fullName': 1
-                }
-            },
-            { $limit: 10 },
-            {
-                $project: {
-                    username: 1,
-                    profile: 1,
-                    commonInterests: 1,
-                    sameBranch: 1
-                }
-            }
-        ]);
+        // STEP 1: Get users who share at least one interest
+        const suggestions = await User.find({
+            _id: { $nin: connectedUserIds },
+            'profile.interests': { $in: userInterests }
+        })
+        .select('username profile')
+        .limit(10);
 
         res.json({
             success: true,
@@ -278,24 +236,14 @@ const getUserSuggestions = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Get user suggestions error:', error);
+        console.error("Suggestion error:", error);
         res.status(500).json({
             success: false,
-            message: 'Server error while fetching user suggestions'
+            message: "Server error"
         });
     }
 };
 
-module.exports = {
-    getUserProfile,
-    getUsers,
-    connectUser,
-    disconnectUser,
-    getUserSuggestions
-};
-// @desc    Plan a visit (add place to user's planned visits)
-// @route   POST /api/users/plan-visit
-// @access  Private
 const planVisit = async (req, res) => {
     try {
         const { placeId, name, category, notes } = req.body;
