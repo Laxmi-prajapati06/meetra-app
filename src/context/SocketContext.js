@@ -19,48 +19,48 @@ export const SocketProvider = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
 
     useEffect(() => {
-        if (isAuthenticated && user) {
-            const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
-                withCredentials: true,
-                auth: {
-                    token: localStorage.getItem('meetra_token')
-                }
-            });
-
-            newSocket.on('connect', () => {
-                console.log('Connected to server');
-                setIsConnected(true);
-                
-                // Authenticate socket with token
-                const token = localStorage.getItem('meetra_token');
-                if (token) {
-                    newSocket.emit('authenticate', token);
-                }
-            });
-
-            newSocket.on('disconnect', () => {
-                console.log('Disconnected from server');
-                setIsConnected(false);
-            });
-
-            newSocket.on('connect_error', (error) => {
-                console.error('Socket connection error:', error);
-                setIsConnected(false);
-            });
-
-            setSocket(newSocket);
-
-            return () => {
-                newSocket.close();
-            };
-        } else {
-            if (socket) {
-                socket.close();
-                setSocket(null);
-                setIsConnected(false);
-            }
+        // only create a socket when the user is authenticated
+        if (!(isAuthenticated && user)) {
+            return;
         }
-    }, [isAuthenticated, socket, user]);
+
+        const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+            withCredentials: true,
+            auth: {
+                token: localStorage.getItem('meetra_token')
+            }
+        });
+
+        newSocket.on('connect', () => {
+            console.log('Connected to server');
+            setIsConnected(true);
+            // Authenticate socket with token
+            const token = localStorage.getItem('meetra_token');
+            if (token) {
+                newSocket.emit('authenticate', token);
+            }
+        });
+
+        newSocket.on('disconnect', () => {
+            console.log('Disconnected from server');
+            setIsConnected(false);
+        });
+
+        newSocket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error);
+            setIsConnected(false);
+        });
+
+        setSocket(newSocket);
+
+        // cleanup when auth state changes or component unmounts
+        return () => {
+            newSocket.off();
+            newSocket.close();
+            setIsConnected(false);
+            setSocket(null);
+        };
+    }, [isAuthenticated, user]);
 
     const value = {
         socket,
