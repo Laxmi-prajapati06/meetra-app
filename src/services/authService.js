@@ -1,11 +1,10 @@
 // src/services/authService.js
-const API_BASE_URL = 'http://localhost:5000/api';
 
 export const authService = {
   // Login user - with mock fallback
   async login(email, password) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,7 +33,7 @@ export const authService = {
   // Register user - with mock fallback
   async register(userData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

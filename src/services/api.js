@@ -1,5 +1,4 @@
 // src/services/api.js
-const API_BASE = 'http://localhost:5000/api';
 
 // Helper function for API calls
 const apiCall = async (endpoint, options = {}) => {
@@ -19,7 +18,7 @@ const apiCall = async (endpoint, options = {}) => {
     }
 
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, config);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}${endpoint}`, config);
         const data = await response.json();
 
         if (!response.ok) {
@@ -110,7 +109,7 @@ export const uploadAPI = {
 
         try {
             console.log('[API] Starting profile picture upload...');
-            const response = await fetch(`${API_BASE}/upload/profile-picture`, config);
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/upload/profile-picture`, config);
             clearTimeout(timeoutId);
             const data = await response.json();
 

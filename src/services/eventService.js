@@ -1,5 +1,3 @@
-// src/services/eventService.js
-const API_BASE_URL = 'http://localhost:5000/api'; // Adjust to your backend URL
 
 // Mock data for development
 const mockEvents = [
@@ -99,7 +97,7 @@ export const eventService = {
   // Get all events - tries real API first, falls back to mock data
   async getEvents() {
     try {
-      const response = await fetch(`${API_BASE_URL}/events`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/events`);
       if (!response.ok) {
         throw new Error('API not available');
       }
@@ -115,8 +113,8 @@ export const eventService = {
   async getEventsByCategory(category) {
     try {
       const url = category === 'All' 
-        ? `${API_BASE_URL}/events`
-        : `${API_BASE_URL}/events?category=${encodeURIComponent(category)}`;
+        ? `${process.env.REACT_APP_API_URL}/events`
+        : `${process.env.REACT_APP_API_URL}/events?category=${encodeURIComponent(category)}`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -136,7 +134,7 @@ export const eventService = {
   // Join an event
   async joinEvent(eventId, userId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/events/${eventId}/join`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/events/${eventId}/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,7 +156,7 @@ export const eventService = {
   // Leave an event
   async leaveEvent(eventId, userId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/events/${eventId}/leave`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/events/${eventId}/leave`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +178,7 @@ export const eventService = {
   // Create a new event
   async createEvent(eventData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/events`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

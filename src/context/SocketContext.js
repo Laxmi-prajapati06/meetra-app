@@ -60,7 +60,7 @@ export const SocketProvider = ({ children }) => {
                 setIsConnected(false);
             }
         }
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, socket, user]);
 
     const value = {
         socket,
